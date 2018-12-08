@@ -1,171 +1,117 @@
-#include <bits/stdc++.h>
-#define N 100
-#define white 10
-#define grey 11
-#define black 12
+//Singly Connected Component and Topological sort for Directed graph
 
+#include<bits/stdc++.h>
 using namespace std;
 
-int graph[N][N], graphT[N][N], color[N], d[N], f[N], pr[N], V, t, T;
-int colorT[N];
-int a, b, scc = 0;
-bool visited[N];
+#define White 0
+#define Grey 1
+#define Black 2
+#define inf 1/0.0
 
+int a,b,i,vertex,edge,d[100],f[100],color[100],colorT[100],adj[100][100],t,pre[100],SCC,graphT[100][100];
 vector<int>topo;
-typedef pair<int,int> iPair;
-
-void dfsT(int vertex)
+void dfs(int node)
 {
-    visited[vertex] = true;
-    colorT[vertex] = grey;
-    T = T + 1;
+    d[node] = ++t;
+    color[node] = Grey;
 
-    // cout << vertex << " ";
-
-    for(int i=1; i<=V; i++)
+    for(int i=1;i<=vertex;i++)
     {
-        if(colorT[i] == white && graphT[vertex][i] == 1)
-        {
-            cout << i << " ";
-            dfsT(i); 
-        }
+        if(adj[node][i])
+            if(color[i] == White){
+                pre[i] = node;
+                dfs(i);
+                // printf("%d-",i);
+            }
     }
+    topo.insert(topo.begin(),node);
 
-
-    T = T + 1;
-    colorT[vertex] = black;
-}
-
-void SCC()
-{
-    priority_queue< iPair, vector<iPair> > pq;
-    for(int i=1; i<=V; i++)
-    {
-        pq.push(make_pair(f[i], i));    //Pair(finishing time of the node, node)
-    }
-
-    for(int x : visited)
-    {
-        visited[x] = false;
-    }
-
-    cout << "Strongly connected componets: " << endl;
-
-    while(!pq.empty())
-    {
-        int u = pq.top().second;
-        pq.pop();
-
-        if(visited[u] == false){
-            cout << u << ": ";
-            scc++; 
-            dfsT(u);
-            cout << endl;
-        }  
-        
-    }
-
-     cout << "Number of Strongly connected componets: " << scc << endl;
-
-    
+    color[node] = Black;
+    f[node] = ++t; 
 
 }
 
-
-
-void dfs(int vertex)
+void dfsT(int node, bool scc)
 {
-    color[vertex] = grey;
-    t = t + 1;
-    d[vertex] = t;
-
-    // cout << vertex << " ";
-
-    for(int i=1; i<=V; i++)
+    colorT[node] = Grey;
+    if(!scc) cout << node << " " ;
+    for(int i=1;i<=vertex;i++)
     {
-        if(color[i] == white && graph[vertex][i] == 1)
-        {
-            pr[i] = vertex;
-            dfs(i); 
-        }
+        if(graphT[node][i])
+            if(colorT[i] == White){
+                dfsT(i,false);
+                // printf("%d-",i);
+            }
     }
 
+    colorT[node] = Black;
 
-    t = t + 1;
-    color[vertex] = black;
-    f[vertex] = t;
-
-    topo.insert(topo.begin(), vertex);
-    
 }
 
-
-void dfsSearch()
+void  transpose()
 {
+    for(int i=1;i<=vertex;i++)
+        for(int j=1;j<=vertex;j++)
+            if(adj[i][j])
+                graphT[j][i] = 1;
 
-    for(int i=1; i<=V; i++)
-    {
-        if(color[i] == white)
-        dfs(i);
-
-    }
 }
-
 
 int main()
 {
-
-    for(int i=0; i<N; i++)
-    {
-        d[i] = f[i] = INT_MAX;
-        pr[i] = -1;
-        color[i] = white;
-        colorT[i] = white;
-    }
-
-    FILE *fi = fopen("data.txt", "r");
-
-    fscanf(fi, "%d", &V);
+    freopen("data.txt","r",stdin);
+    memset(pre,-1,sizeof(pre));
+    memset(d,inf,sizeof(pre));
+    memset(f,inf,sizeof(pre));
+    
+    cout << "Input Number of vertex: " ;
+    cin >> vertex;
 
     while(1)
     {
-        
+        cout << "Edge " << i+1 << ": " ;
 
-        fscanf(fi, "%d%d", &a, &b);
+        cin >> a >> b;
+        if(a==0 || b==0) break;
+        if(a>vertex || b > vertex)
+            cout << "Invalid Input" << endl;
 
-        if(a <= 0 || b <= 0)
-            break;
+        else{
+            adj[a][b] = 1;
+            // adj[b][a] = 1;
+            i++;
+        }
+    }
+    cout << endl<< endl ;
 
-        if(a > V || b > V)
+    transpose();
+
+
+    for(int i=1;i<=vertex;i++)
+        if(color[i]==White)
+            dfs(i);
+
+    for(int i=0;i<topo.size();i++)
+        if(colorT[topo[i]] == White)
         {
-            cout << "Invalid input " << endl;
-            continue;
+            cout << topo[i] << ": " ;
+            dfsT(topo[i],true);
+            cout << endl;
+            SCC++;
         }
 
-        graph[a][b] = 1;
-        graphT[b][a] = 1;
-    }
+    cout << "\nTotal SCC: " << SCC <<endl;
 
+    // for(int i =1;i<=vertex;i++)
+    //     cout << "Discovering and finishing time of node " << i 
+    //         << "---> " << d[i] << "/" << f[i] << endl ;
 
-    
-    dfsSearch();
-
-
-    cout << endl << "Topologically sorted: ";
-    for(int i=0; i<topo.size(); i++)
-    {
+    cout << "\nTopological Sort: ";
+    for(int i = 0; i<topo.size();i++)
         cout << topo[i] << " ";
-    }
+    cout << endl << endl;
 
-    cout << endl;
 
-    SCC();
-
-    cout << "Finishing time: ";
-    for(int i=1; i<=V; i++)
-    {
-        cout << f[i] << " ";
-    }
 
     return 0;
 }
